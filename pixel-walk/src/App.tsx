@@ -1,9 +1,18 @@
 import './App.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import Scene from './components/Scene'
 import { parseSubtitles, type LyricLine } from './lyrics'
 
 type Act = 'establish' | 'vows' | 'before' | 'singing' | 'kiss' | 'celebration' | 'freeze'
+type BlessingParticle = {
+  id: number
+  x: number
+  y: number
+  text: string
+  size: number
+  drift: number
+  delay: number
+}
 
 const loadSubtitles = async (): Promise<LyricLine[]> => {
   const candidates = [
@@ -31,8 +40,10 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [sealed, setSealed] = useState(true)
+  const [blessingBursts, setBlessingBursts] = useState<BlessingParticle[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
+  const burstIdRef = useRef(0)
 
   useEffect(() => {
     loadSubtitles().then(setLyrics).catch(() => setLyrics([]))
@@ -147,8 +158,32 @@ function App() {
     [],
   )
 
+  const handleBlessingBurst = (event: PointerEvent<HTMLDivElement>) => {
+    if (sealed) return
+    const { clientX, clientY } = event
+    const labels = ['吉祥', '祝福', '爱心', '囍', '❤']
+    const burstId = burstIdRef.current + 1
+    burstIdRef.current = burstId
+    const newParticles: BlessingParticle[] = Array.from({ length: 14 }, (_, index) => {
+      const spread = 80
+      return {
+        id: burstId * 100 + index,
+        x: clientX + (Math.random() - 0.5) * spread,
+        y: clientY + (Math.random() - 0.5) * spread,
+        text: labels[index % labels.length],
+        size: 12 + Math.random() * 8,
+        drift: (Math.random() - 0.5) * 60,
+        delay: Math.random() * 0.4,
+      }
+    })
+    setBlessingBursts((prev) => [...prev, ...newParticles])
+    window.setTimeout(() => {
+      setBlessingBursts((prev) => prev.filter((item) => !newParticles.some((p) => p.id === item.id)))
+    }, 1600)
+  }
+
   return (
-    <div className={`app ${sealed ? 'sealed' : 'opened'}`}>
+    <div className={`app ${sealed ? 'sealed' : 'opened'}`} onPointerDown={handleBlessingBurst}>
       <div className={`red-envelope ${sealed ? 'sealed' : 'open'}`} aria-hidden={!sealed}>
         <div className="seal-panel left" />
         <div className="seal-panel right" />
@@ -164,6 +199,23 @@ function App() {
           </button>
           <div className="seal-sub">福满新堂 · 永结同心</div>
         </div>
+      </div>
+      <div className="click-particles" aria-hidden="true">
+        {blessingBursts.map((particle) => (
+          <span
+            key={particle.id}
+            className="blessing-particle"
+            style={{
+              left: particle.x,
+              top: particle.y,
+              fontSize: `${particle.size}px`,
+              animationDelay: `${particle.delay}s`,
+              ['--drift' as const]: `${particle.drift}px`,
+            }}
+          >
+            {particle.text}
+          </span>
+        ))}
       </div>
       <header className="ui-bar">
         <div className="audio-controls">

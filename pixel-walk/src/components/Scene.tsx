@@ -94,6 +94,11 @@ ${skyLine}
 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~`}
       </pre>
       <div className="scene-backdrop" />
+      <div className="spotlight-field" aria-hidden="true">
+        <div className="spotlight s1" />
+        <div className="spotlight s2" />
+        <div className="spotlight s3" />
+      </div>
       <div className="scene-curtain">
         <span>{'<3'}</span>
         <span>{'<3'}</span>
