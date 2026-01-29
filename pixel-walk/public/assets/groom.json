@@ -1,0 +1,8 @@
+{
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "animations": {
+    "wedding": { "row": 0, "frames": 8, "fps": 12, "loop": true },
+    "idle": { "row": 0, "frames": 4, "fps": 6, "loop": true }
+  }
+}

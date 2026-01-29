@@ -1,0 +1,9 @@
+{
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "animations": {
+    "cheer": { "row": 0, "frames": 6, "fps": 10, "loop": true },
+    "jump": { "row": 0, "frames": 6, "fps": 12, "loop": true },
+    "idle": { "row": 0, "frames": 4, "fps": 6, "loop": true }
+  }
+}

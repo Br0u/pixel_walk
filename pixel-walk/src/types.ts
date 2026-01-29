@@ -1,14 +1,19 @@
-export type SpriteMeta = {
-  id: string
-  name: string
-  sheet: string
-  frameWidth: number
-  frameHeight: number
-  frameCount: number
+export type AnimationClip = {
+  row: number
+  frames: number
   fps: number
-  scale?: number
+  loop: boolean
 }
 
-export type CharactersData = {
-  characters: SpriteMeta[]
+export type SpriteConfig = {
+  frameWidth: number
+  frameHeight: number
+  animations: Record<string, AnimationClip>
+}
+
+export type SpriteMeta = SpriteConfig & {
+  name: string
+  sheet: string
+  scale?: number
+  rows: number
 }
