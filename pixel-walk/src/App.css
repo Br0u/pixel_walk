@@ -149,6 +149,111 @@
   transform: scale(0.98);
 }
 
+@media (orientation: portrait) and (max-width: 600px) {
+  .seal-content {
+    position: relative;
+    padding: 14px 18px;
+    border-radius: 18px;
+    background-image:
+      url('/assets/user/xy.jpg'),
+      radial-gradient(circle at 20% 20%, rgba(255, 215, 150, 0.18), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(255, 200, 140, 0.16), transparent 42%),
+      radial-gradient(circle at 30% 80%, rgba(255, 200, 150, 0.14), transparent 46%),
+      linear-gradient(180deg, rgba(90, 16, 18, 0.5), rgba(60, 12, 16, 0.55));
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size: 150px auto, auto, auto, auto, auto;
+    background-position: center, center, center, center, center;
+    background-color: rgba(70, 14, 18, 0.55);
+    background-blend-mode: multiply, screen, screen, screen, normal;
+    border: 1px solid rgba(255, 215, 150, 0.75);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+  }
+
+  .seal-content::before,
+  .seal-content::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 230, 180, 0.35);
+    pointer-events: none;
+  }
+
+  .seal-content::after {
+    inset: -4px;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 210, 140, 0.45);
+    box-shadow:
+      0 0 18px rgba(255, 200, 120, 0.25),
+      inset 0 0 18px rgba(255, 190, 120, 0.15);
+  }
+
+  .seal-title {
+    position: relative;
+  }
+
+  .seal-title::before,
+  .seal-title::after {
+    content: '囍';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: rgba(255, 210, 140, 0.95);
+    opacity: 0.8;
+  }
+
+  .seal-title::before {
+    left: -26px;
+  }
+
+  .seal-title::after {
+    right: -26px;
+  }
+
+  .seal-names {
+    position: relative;
+    padding: 6px 18px;
+  }
+
+  .seal-names::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 215, 150, 0.5);
+    background: linear-gradient(90deg, rgba(120, 20, 22, 0.55), rgba(160, 40, 30, 0.35));
+    z-index: -1;
+  }
+
+  .seal-sub {
+    position: relative;
+  }
+
+  .seal-sub::before {
+    content: '吉祥 · 祝福';
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: rgba(255, 215, 150, 0.8);
+    opacity: 0.85;
+  }
+
+  .seal-title,
+  .seal-names,
+  .seal-sub {
+    text-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  .seal-sub {
+    opacity: 0.9;
+  }
+}
+
 .ui-bar {
   width: min(1100px, 92vw);
   display: flex;
