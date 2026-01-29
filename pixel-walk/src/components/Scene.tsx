@@ -52,6 +52,7 @@ export default function Scene({
   const coupleClip = pickClip(bride, ['idle'])
   const groomClip = pickClip(groom, ['idle'])
   const couplePlaying = act === 'singing' || act === 'celebration'
+  const catCheer = songPlaying
   const guestPositions = [
     { side: 'left', x: 2, y: 38 },
     { side: 'left', x: 6, y: 20 },
@@ -71,7 +72,7 @@ export default function Scene({
     { side: 'right', x: 30, y: 6 },
   ]
   const reelInterval = 5
-  const reelImages = Array.from({ length: 15 }, (_, index) => {
+  const reelImages = Array.from({ length: 18 }, (_, index) => {
     const suffix = String(index + 1).padStart(2, '0')
     return `/assets/pic/memory-${suffix}.jpg`
   })
@@ -214,6 +215,31 @@ ${skyLine}
             playing={couplePlaying}
             className="sprite groom performer"
           />
+        </div>
+      </div>
+
+      <div className={`pet-row ${catCheer ? 'cat-cheer' : ''}`} aria-hidden="true">
+        <div className="pet pet-cat">
+          <div className="pet-name">sugie</div>
+          <pre className="pet-art">{' /\\_/\\\n( o.o )\n > ^ <'}</pre>
+          <div className="meow-bubbles">
+            <span className="meow m1">喵~</span>
+            <span className="meow m2">喵~</span>
+            <span className="meow m3">喵~</span>
+          </div>
+        </div>
+        <div className="pet pet-cat">
+          <div className="pet-name">pepper</div>
+          <pre className="pet-art">{' /\\_/\\\n( o.o )\n > ^ <'}</pre>
+          <div className="meow-bubbles">
+            <span className="meow m4">喵~</span>
+            <span className="meow m5">喵~</span>
+            <span className="meow m6">喵~</span>
+          </div>
+        </div>
+        <div className="pet pet-lizard">
+          <div className="pet-name">肉桂</div>
+          <div className="pet-emoji">🦎</div>
         </div>
       </div>
 

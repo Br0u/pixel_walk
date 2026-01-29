@@ -30,6 +30,7 @@ function App() {
   const [lyrics, setLyrics] = useState<LyricLine[]>([])
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [sealed, setSealed] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
 
@@ -147,7 +148,23 @@ function App() {
   )
 
   return (
-    <div className="app">
+    <div className={`app ${sealed ? 'sealed' : 'opened'}`}>
+      <div className={`red-envelope ${sealed ? 'sealed' : 'open'}`} aria-hidden={!sealed}>
+        <div className="seal-panel left" />
+        <div className="seal-panel right" />
+        <div className="seal-content">
+          <div className="seal-title">良缘永结</div>
+          <div className="seal-names">
+            <span>陈瑞天</span>
+            <span className="seal-heart">♥</span>
+            <span>程于书</span>
+          </div>
+          <button type="button" className="seal-button" onClick={() => setSealed(false)}>
+            点击开启
+          </button>
+          <div className="seal-sub">福满新堂 · 永结同心</div>
+        </div>
+      </div>
       <header className="ui-bar">
         <div className="audio-controls">
           <button type="button" className={`song-btn ${songPlaying ? 'active' : ''}`} onClick={handlePlayPause}>
