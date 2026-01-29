@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { AnimationClip, SpriteMeta } from '../types'
 import Sprite from './Sprite'
 
@@ -7,6 +8,10 @@ type SceneProps = {
   guests: { name: string; symbol: string }[]
   act: 'establish' | 'vows' | 'before' | 'singing' | 'kiss' | 'celebration' | 'freeze'
   songPlaying: boolean
+  reelActive: boolean
+  reelFadeOut: boolean
+  blessingActive: boolean
+  blessingFadeOut: boolean
 }
 
 const pickClip = (meta: SpriteMeta, names: string[]): AnimationClip => {
@@ -21,7 +26,17 @@ const pickClip = (meta: SpriteMeta, names: string[]): AnimationClip => {
   return first
 }
 
-export default function Scene({ bride, groom, guests, act, songPlaying }: SceneProps) {
+export default function Scene({
+  bride,
+  groom,
+  guests,
+  act,
+  songPlaying,
+  reelActive,
+  reelFadeOut,
+  blessingActive,
+  blessingFadeOut,
+}: SceneProps) {
   const guestBodies = [
     ' o\n/|\\\n/ \\',
     ' o\n-|-\n/ \\',
@@ -29,14 +44,15 @@ export default function Scene({ bride, groom, guests, act, songPlaying }: SceneP
     ' o\n/|\\\n _ ',
   ]
   const luxeBanner =
-    act === 'celebration' || act === 'singing' ? '✦✦ GRAND BALL ✦✦' : '✦✦ WEDDING CEREMONY ✦✦'
-  const sparkleLine = '✧  ✧  ✧  ✧  ✧  ✧  ✧  ✧  ✧'
-  const skyLine = act === 'singing' || act === 'celebration' ? '✨ 🎵 ✨ 🎵 ✨' : '☁️   ⭐   ☁️'
+    act === 'celebration' || act === 'singing' ? '*** GRAND BALL ***' : '*** WEDDING CEREMONY ***'
+  const sparkleLine = ' . *  .   *  .  *   .  *  . ' as const
+  const skyLine = act === 'singing' || act === 'celebration' ? '  *   .   *   .   *   .   *  ' : '  .    .     .    .    .   ' as const
   const heartSymbol = act === 'vows' ? '❤️' : ''
   const showKiss = act === 'kiss'
   const coupleClip = pickClip(bride, ['idle'])
   const groomClip = pickClip(groom, ['idle'])
   const couplePlaying = act === 'singing' || act === 'celebration'
+  const catCheer = songPlaying
   const guestPositions = [
     { side: 'left', x: 2, y: 38 },
     { side: 'left', x: 6, y: 20 },
@@ -55,71 +71,136 @@ export default function Scene({ bride, groom, guests, act, songPlaying }: SceneP
     { side: 'right', x: 26, y: 20 },
     { side: 'right', x: 30, y: 6 },
   ]
+  const reelInterval = 5
+  const reelImages = Array.from({ length: 18 }, (_, index) => {
+    const suffix = String(index + 1).padStart(2, '0')
+    return `/assets/pic/memory-${suffix}.jpg`
+  })
+  const reelDuration = reelImages.length * reelInterval
+  const reelDurationStyle = { '--reel-duration': `${reelDuration}s` } as CSSProperties
+  const buildReelStyle = (src: string, index: number): CSSProperties => ({
+    ...reelDurationStyle,
+    backgroundImage: `url('${src}')`,
+    animationDelay: `${index * reelInterval}s`,
+  })
 
   return (
-    <div className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''}`}>
+    <div className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''} ${reelActive ? 'reel-on' : ''} ${reelFadeOut ? 'reel-fade' : ''} ${blessingActive ? 'blessing-on' : ''} ${blessingFadeOut ? 'blessing-fade' : ''}`}>
       <pre className="scene-art">
-        {`           ${luxeBanner}
+        {`       ${luxeBanner}
 ${sparkleLine}
-║║║  ║║║  ║║║  ║║║  ║║║  ║║║  ║║║
-╔══════════════════════════════════╗
-║   ✦  ✦   ✦   ✦   ✦   ✦   ✦   ✦   ║
-╚══════════════════════════════════╝
-${sparkleLine}
+  .     *        .      *        .
 ${skyLine}
-~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~`}
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~`}
       </pre>
       <div className="scene-backdrop" />
+      <div className="spotlight-field" aria-hidden="true">
+        <div className="spotlight s1" />
+        <div className="spotlight s2" />
+        <div className="spotlight s3" />
+      </div>
       <div className="scene-curtain">
-        <span>❦</span>
-        <span>❦</span>
-        <span>❦</span>
+        <span>{'<3'}</span>
+        <span>{'<3'}</span>
+        <span>{'<3'}</span>
       </div>
       <div className="scene-decor">
-        <span className="sparkle s1">✨</span>
-        <span className="sparkle s2">✨</span>
-        <span className="sparkle s3">✨</span>
-        <span className="sparkle s4">✨</span>
-        <span className="sparkle s5">✨</span>
-        <span className="ribbon r1">🎀</span>
-        <span className="ribbon r2">🎀</span>
-        <span className="confetti c1">🎊</span>
-        <span className="confetti c2">🎊</span>
-        <span className="confetti c3">🎊</span>
+        <span className="sparkle s1">{'*'}</span>
+        <span className="sparkle s2">{'*'}</span>
+        <span className="sparkle s3">{'+'}</span>
+        <span className="sparkle s4">{'*'}</span>
+        <span className="sparkle s5">{'o'}</span>
+        <span className="ribbon r1">{'~'}</span>
+        <span className="ribbon r2">{'~'}</span>
+        <span className="confetti c1">{'*'}</span>
+        <span className="confetti c2">{'*'}</span>
+        <span className="confetti c3">{'*'}</span>
+      </div>
+      <div className="firework-field">
+        <span className="firework f1">{'*'}</span>
+        <span className="firework f2">{'+'}</span>
+        <span className="firework f3">{'o'}</span>
+        <span className="firework f4">{'*'}</span>
+        <span className="firework f5">{'+'}</span>
+        <span className="firework f6">{'o'}</span>
+      </div>
+      <div className="firecracker-field">
+        <span className="firecracker b1">{'===='}</span>
+        <span className="firecracker b2">{'===='}</span>
+        <span className="firecracker b3">{'===='}</span>
+        <span className="firecracker b4">{'===='}</span>
+      </div>
+      <div className="cloud-field">
+        <span className="cloud c1">{'~ ~ ~'}</span>
+        <span className="cloud c2">{'~ ~ ~ ~'}</span>
+        <span className="cloud c3">{'~ ~'}</span>
+        <span className="cloud c4">{'~ ~ ~ ~ ~'}</span>
+        <span className="cloud c5">{'~ ~'}</span>
+        <span className="cloud c6">{'~ ~ ~'}</span>
+        <span className="cloud c7">{'~ ~ ~ ~'}</span>
+        <span className="cloud c8">{'~ ~'}</span>
+        <span className="cloud c9">{'~ ~ ~'}</span>
+        <span className="cloud c10">{'~ ~ ~ ~ ~'}</span>
       </div>
       <div className="particle-field">
-        <span className="particle p1">✧</span>
-        <span className="particle p2">✦</span>
-        <span className="particle p3">✧</span>
-        <span className="particle p4">✦</span>
-        <span className="particle p5">✧</span>
-        <span className="particle p6">✦</span>
-        <span className="particle p7">✧</span>
-        <span className="particle p8">✦</span>
-        <span className="particle p9">✧</span>
-        <span className="particle p10">✦</span>
-        <span className="particle p11">✧</span>
-        <span className="particle p12">✦</span>
-        <span className="particle p13">✺</span>
-        <span className="particle p14">✹</span>
-        <span className="particle p15">❇</span>
-        <span className="particle p16">❈</span>
-        <span className="particle p17">✶</span>
-        <span className="particle p18">✷</span>
-        <span className="particle p19">✴</span>
-        <span className="particle p20">✵</span>
-        <span className="particle p21">✻</span>
-        <span className="particle p22">✼</span>
-        <span className="particle p23">✧</span>
-        <span className="particle p24">✦</span>
-        <span className="particle p25">✺</span>
-        <span className="particle p26">❉</span>
-        <span className="particle p27">✹</span>
-        <span className="particle p28">❇</span>
-        <span className="particle p29">✶</span>
-        <span className="particle p30">✷</span>
+        <span className="particle p1">{'*'}</span>
+        <span className="particle p2">{'+'}</span>
+        <span className="particle p3">{'*'}</span>
+        <span className="particle p4">{'+'}</span>
+        <span className="particle p5">{'*'}</span>
+        <span className="particle p6">{'+'}</span>
+        <span className="particle p7">{'*'}</span>
+        <span className="particle p8">{'+'}</span>
+        <span className="particle p9">{'*'}</span>
+        <span className="particle p10">{'+'}</span>
+        <span className="particle p11">{'*'}</span>
+        <span className="particle p12">{'+'}</span>
+        <span className="particle p13">{'o'}</span>
+        <span className="particle p14">{'o'}</span>
+        <span className="particle p15">{'*'}</span>
+        <span className="particle p16">{'*'}</span>
+        <span className="particle p17">{'+'}</span>
+        <span className="particle p18">{'+'}</span>
+        <span className="particle p19">{'*'}</span>
+        <span className="particle p20">{'*'}</span>
+        <span className="particle p21">{'+'}</span>
+        <span className="particle p22">{'+'}</span>
+        <span className="particle p23">{'*'}</span>
+        <span className="particle p24">{'+'}</span>
+        <span className="particle p25">{'o'}</span>
+        <span className="particle p26">{'o'}</span>
+        <span className="particle p27">{'+'}</span>
+        <span className="particle p28">{'*'}</span>
+        <span className="particle p29">{'+'}</span>
+        <span className="particle p30">{'*'}</span>
+        <span className="particle p31">{'*'}</span>
+        <span className="particle p32">{'+'}</span>
+        <span className="particle p33">{'o'}</span>
+        <span className="particle p34">{'*'}</span>
+        <span className="particle p35">{'+'}</span>
+        <span className="particle p36">{'o'}</span>
+        <span className="particle p37">{'*'}</span>
+        <span className="particle p38">{'+'}</span>
+        <span className="particle p39">{'*'}</span>
+        <span className="particle p40">{'o'}</span>
       </div>
       <div className="scene-stage" />
+
+      {reelActive && (
+        <div className="memory-reel" aria-hidden="true">
+          <div className="projector-beam" />
+          <div className="reel-screen">
+            {reelImages.map((src, index) => (
+              <div key={src} className="reel-slide" style={buildReelStyle(src, index)} />
+            ))}
+          </div>
+          <div className="reel-frame">
+            <div className="frame-glow" />
+            <div className="film-grain" />
+          </div>
+          <div className="reel-caption">MEMORY REEL - 2026</div>
+        </div>
+      )}
 
       <div className="stage-area">
         <div className="couple bride">
@@ -142,8 +223,51 @@ ${skyLine}
         </div>
       </div>
 
+      <div className={`pet-row ${catCheer ? 'cat-cheer' : ''}`} aria-hidden="true">
+        <div className="pet pet-cat">
+          <div className="pet-name">sugie</div>
+          <pre className="pet-art">{' /\\_/\\\n( o.o )\n > ^ <'}</pre>
+          <div className="meow-bubbles">
+            <span className="meow m1">喵~</span>
+            <span className="meow m2">喵~</span>
+            <span className="meow m3">喵~</span>
+          </div>
+        </div>
+        <div className="pet pet-cat">
+          <div className="pet-name">pepper</div>
+          <pre className="pet-art">{' /\\_/\\\n( o.o )\n > ^ <'}</pre>
+          <div className="meow-bubbles">
+            <span className="meow m4">喵~</span>
+            <span className="meow m5">喵~</span>
+            <span className="meow m6">喵~</span>
+          </div>
+        </div>
+        <div className="pet pet-lizard">
+          <div className="pet-name">肉桂</div>
+          <div className="pet-emoji">🦎</div>
+        </div>
+      </div>
+
       {heartSymbol && <div className="scene-heart">{heartSymbol}</div>}
       {showKiss && <div className="scene-kiss">🤵❤️👰</div>}
+
+      {blessingActive && (
+        <div className="stage-blessing" role="status" aria-live="polite">
+          <div className="blessing-knot">{'囍'}</div>
+          <div className="blessing-text">{'书瑞成双，新婚大喜'}</div>
+          <div className="blessing-knot">{'囍'}</div>
+          <div className="blessing-particles">
+            <span className="bp bp1">{'*'}</span>
+            <span className="bp bp2">{'+'}</span>
+            <span className="bp bp3">{'*'}</span>
+            <span className="bp bp4">{'+'}</span>
+            <span className="bp bp5">{'*'}</span>
+            <span className="bp bp6">{'+'}</span>
+            <span className="bp bp7">{'*'}</span>
+            <span className="bp bp8">{'+'}</span>
+          </div>
+        </div>
+      )}
 
       <div className="guest-cloud">
         {guests.map((guest, index) => {

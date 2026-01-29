@@ -1,9 +1,18 @@
 import './App.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import Scene from './components/Scene'
 import { parseSubtitles, type LyricLine } from './lyrics'
 
 type Act = 'establish' | 'vows' | 'before' | 'singing' | 'kiss' | 'celebration' | 'freeze'
+type BlessingParticle = {
+  id: number
+  x: number
+  y: number
+  text: string
+  size: number
+  drift: number
+  delay: number
+}
 
 const loadSubtitles = async (): Promise<LyricLine[]> => {
   const candidates = [
@@ -30,8 +39,11 @@ function App() {
   const [lyrics, setLyrics] = useState<LyricLine[]>([])
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [sealed, setSealed] = useState(true)
+  const [blessingBursts, setBlessingBursts] = useState<BlessingParticle[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
+  const burstIdRef = useRef(0)
 
   useEffect(() => {
     loadSubtitles().then(setLyrics).catch(() => setLyrics([]))
@@ -105,6 +117,11 @@ function App() {
     return -1
   }, [currentTime, lyrics])
 
+  const reelActive = songPlaying && currentTime >= 28
+  const reelFadeOut = currentTime >= 160
+  const blessingActive = songPlaying && currentTime >= 169
+  const blessingFadeOut = songPlaying && duration > 0 && currentTime >= Math.max(duration - 3, 0)
+
   useEffect(() => {
     if (activeIndex < 0) return
     const node = lyricRefs.current[activeIndex]
@@ -141,8 +158,68 @@ function App() {
     [],
   )
 
+  const handleBlessingBurst = (event: PointerEvent<HTMLDivElement>) => {
+    if (sealed) return
+    const { clientX, clientY } = event
+    const labels = ['吉祥', '祝福', '爱心', '囍', '❤']
+    const burstId = burstIdRef.current + 1
+    burstIdRef.current = burstId
+    const newParticles: BlessingParticle[] = Array.from({ length: 14 }, (_, index) => {
+      const spread = 80
+      return {
+        id: burstId * 100 + index,
+        x: clientX + (Math.random() - 0.5) * spread,
+        y: clientY + (Math.random() - 0.5) * spread,
+        text: labels[index % labels.length],
+        size: 12 + Math.random() * 8,
+        drift: (Math.random() - 0.5) * 60,
+        delay: Math.random() * 0.4,
+      }
+    })
+    setBlessingBursts((prev) => [...prev, ...newParticles])
+    window.setTimeout(() => {
+      setBlessingBursts((prev) => prev.filter((item) => !newParticles.some((p) => p.id === item.id)))
+    }, 1600)
+  }
+
+  const buildBlessingStyle = (particle: BlessingParticle) =>
+    ({
+      left: particle.x,
+      top: particle.y,
+      fontSize: `${particle.size}px`,
+      animationDelay: `${particle.delay}s`,
+      '--drift': `${particle.drift}px`,
+    }) as CSSProperties
+
   return (
-    <div className="app">
+    <div className={`app ${sealed ? 'sealed' : 'opened'}`} onPointerDown={handleBlessingBurst}>
+      <div className={`red-envelope ${sealed ? 'sealed' : 'open'}`} aria-hidden={!sealed}>
+        <div className="seal-panel left" />
+        <div className="seal-panel right" />
+        <div className="seal-content">
+          <div className="seal-title">良缘永结</div>
+          <div className="seal-names">
+            <span>陈瑞天</span>
+            <span className="seal-heart">♥</span>
+            <span>程于书</span>
+          </div>
+          <button type="button" className="seal-button" onClick={() => setSealed(false)}>
+            点击开启
+          </button>
+          <div className="seal-sub">福满新堂 · 永结同心</div>
+        </div>
+      </div>
+      <div className="click-particles" aria-hidden="true">
+        {blessingBursts.map((particle) => (
+          <span
+            key={particle.id}
+            className="blessing-particle"
+            style={buildBlessingStyle(particle)}
+          >
+            {particle.text}
+          </span>
+        ))}
+      </div>
       <header className="ui-bar">
         <div className="audio-controls">
           <button type="button" className={`song-btn ${songPlaying ? 'active' : ''}`} onClick={handlePlayPause}>
@@ -164,6 +241,10 @@ function App() {
         <Scene
           act={act}
           songPlaying={songPlaying}
+          reelActive={reelActive}
+          reelFadeOut={reelFadeOut}
+          blessingActive={blessingActive}
+          blessingFadeOut={blessingFadeOut}
           bride={brideSprite}
           groom={groomSprite}
           guests={[
