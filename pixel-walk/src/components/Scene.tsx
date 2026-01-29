@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { AnimationClip, SpriteMeta } from '../types'
 import Sprite from './Sprite'
 
@@ -7,6 +8,8 @@ type SceneProps = {
   guests: { name: string; symbol: string }[]
   act: 'establish' | 'vows' | 'before' | 'singing' | 'kiss' | 'celebration' | 'freeze'
   songPlaying: boolean
+  reelActive: boolean
+  reelFadeOut: boolean
   blessingActive: boolean
   blessingFadeOut: boolean
 }
@@ -23,7 +26,17 @@ const pickClip = (meta: SpriteMeta, names: string[]): AnimationClip => {
   return first
 }
 
-export default function Scene({ bride, groom, guests, act, songPlaying, blessingActive, blessingFadeOut }: SceneProps) {
+export default function Scene({
+  bride,
+  groom,
+  guests,
+  act,
+  songPlaying,
+  reelActive,
+  reelFadeOut,
+  blessingActive,
+  blessingFadeOut,
+}: SceneProps) {
   const guestBodies = [
     ' o\n/|\\\n/ \\',
     ' o\n-|-\n/ \\',
@@ -57,9 +70,21 @@ export default function Scene({ bride, groom, guests, act, songPlaying, blessing
     { side: 'right', x: 26, y: 20 },
     { side: 'right', x: 30, y: 6 },
   ]
+  const reelInterval = 5
+  const reelImages = Array.from({ length: 15 }, (_, index) => {
+    const suffix = String(index + 1).padStart(2, '0')
+    return `/assets/pic/memory-${suffix}.jpg`
+  })
+  const reelDuration = reelImages.length * reelInterval
+  const reelDurationStyle = { '--reel-duration': `${reelDuration}s` } as CSSProperties
+  const buildReelStyle = (src: string, index: number): CSSProperties => ({
+    ...reelDurationStyle,
+    backgroundImage: `url('${src}')`,
+    animationDelay: `${index * reelInterval}s`,
+  })
 
   return (
-    <div className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''} ${blessingActive ? 'blessing-on' : ''} ${blessingFadeOut ? 'blessing-fade' : ''}`}>
+    <div className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''} ${reelActive ? 'reel-on' : ''} ${reelFadeOut ? 'reel-fade' : ''} ${blessingActive ? 'blessing-on' : ''} ${blessingFadeOut ? 'blessing-fade' : ''}`}>
       <pre className="scene-art">
         {`       ${luxeBanner}
 ${sparkleLine}
@@ -154,6 +179,22 @@ ${skyLine}
         <span className="particle p40">{'o'}</span>
       </div>
       <div className="scene-stage" />
+
+      {reelActive && (
+        <div className="memory-reel" aria-hidden="true">
+          <div className="projector-beam" />
+          <div className="reel-screen">
+            {reelImages.map((src, index) => (
+              <div key={src} className="reel-slide" style={buildReelStyle(src, index)} />
+            ))}
+          </div>
+          <div className="reel-frame">
+            <div className="frame-glow" />
+            <div className="film-grain" />
+          </div>
+          <div className="reel-caption">MEMORY REEL - 2026</div>
+        </div>
+      )}
 
       <div className="stage-area">
         <div className="couple bride">

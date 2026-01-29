@@ -105,6 +105,8 @@ function App() {
     return -1
   }, [currentTime, lyrics])
 
+  const reelActive = songPlaying && currentTime >= 28
+  const reelFadeOut = currentTime >= 160
   const blessingActive = songPlaying && currentTime >= 169
   const blessingFadeOut = songPlaying && duration > 0 && currentTime >= Math.max(duration - 3, 0)
 
@@ -167,6 +169,8 @@ function App() {
         <Scene
           act={act}
           songPlaying={songPlaying}
+          reelActive={reelActive}
+          reelFadeOut={reelFadeOut}
           blessingActive={blessingActive}
           blessingFadeOut={blessingFadeOut}
           bride={brideSprite}
