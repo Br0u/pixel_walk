@@ -137,6 +137,17 @@
   .lyrics-dock {
     margin-top: 10px;
   }
+
+  .stage-blessing {
+    font-size: 20px;
+    padding: 12px 20px;
+    letter-spacing: 0.08em;
+  }
+
+  .scene-art {
+    inset: 14px 16px auto 16px;
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -154,6 +165,52 @@
 
   .lyrics-list {
     max-height: 120px;
+  }
+
+  .scene-art {
+    inset: 12px 12px auto 12px;
+    font-size: 11px;
+  }
+
+  .scene-curtain {
+    height: 96px;
+    padding: 0 36px;
+    font-size: 18px;
+    letter-spacing: 0.14em;
+  }
+
+  .scene-stage {
+    width: 420px;
+    height: 170px;
+  }
+
+  .stage-area {
+    width: 420px;
+    gap: 32px;
+    bottom: 112px;
+  }
+
+  .cloud {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+  }
+
+  .firework {
+    font-size: 12px;
+  }
+
+  .firecracker {
+    font-size: 11px;
+  }
+
+  .stage-blessing {
+    bottom: 220px;
+    font-size: 18px;
+    padding: 10px 18px;
+  }
+
+  .blessing-knot {
+    font-size: 14px;
   }
 }
 
