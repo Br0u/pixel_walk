@@ -1,5 +1,5 @@
 import './App.css'
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import Scene from './components/Scene'
 import { parseSubtitles, type LyricLine } from './lyrics'
 
@@ -182,6 +182,15 @@ function App() {
     }, 1600)
   }
 
+  const buildBlessingStyle = (particle: BlessingParticle) =>
+    ({
+      left: particle.x,
+      top: particle.y,
+      fontSize: `${particle.size}px`,
+      animationDelay: `${particle.delay}s`,
+      '--drift': `${particle.drift}px`,
+    }) as CSSProperties
+
   return (
     <div className={`app ${sealed ? 'sealed' : 'opened'}`} onPointerDown={handleBlessingBurst}>
       <div className={`red-envelope ${sealed ? 'sealed' : 'open'}`} aria-hidden={!sealed}>
@@ -205,13 +214,7 @@ function App() {
           <span
             key={particle.id}
             className="blessing-particle"
-            style={{
-              left: particle.x,
-              top: particle.y,
-              fontSize: `${particle.size}px`,
-              animationDelay: `${particle.delay}s`,
-              ['--drift' as const]: `${particle.drift}px`,
-            }}
+            style={buildBlessingStyle(particle)}
           >
             {particle.text}
           </span>
