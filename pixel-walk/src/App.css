@@ -199,6 +199,23 @@
   gap: 8px;
 }
 
+.scene-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.scene-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scene-scroll::-webkit-scrollbar-thumb {
+  background: rgba(248, 230, 170, 0.25);
+  border-radius: 999px;
+}
+
 
 .scene {
   position: relative;
@@ -454,6 +471,18 @@
 }
 
 @media (max-width: 420px) {
+  .scene-scroll {
+    padding-bottom: 6px;
+  }
+
+  .scene {
+    min-width: 360px;
+  }
+
+  .lyrics-dock {
+    width: min(1100px, 98vw);
+  }
+
   .scene {
     height: 360px;
   }
@@ -471,6 +500,17 @@
     width: 320px;
     gap: 22px;
     bottom: 98px;
+  }
+
+  .couple.bride {
+    transform: translateX(10px);
+    z-index: 2;
+  }
+
+  .couple.groom {
+    transform: translateX(-10px);
+    z-index: 1;
+    opacity: 0.92;
   }
 
   .stage-blessing {
@@ -1081,6 +1121,21 @@
 
 .couple.groom {
   transform: translateX(12px);
+}
+
+.couple-overlap .stage-area {
+  gap: 6px;
+}
+
+.couple-overlap .couple.bride {
+  transform: translateX(44px);
+  z-index: 2;
+}
+
+.couple-overlap .couple.groom {
+  transform: translateX(-44px);
+  z-index: 1;
+  opacity: 0.86;
 }
 
 .emoji-name {

@@ -41,9 +41,11 @@ function App() {
   const [duration, setDuration] = useState(0)
   const [sealed, setSealed] = useState(true)
   const [blessingBursts, setBlessingBursts] = useState<BlessingParticle[]>([])
+  const [overlapActive, setOverlapActive] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
   const burstIdRef = useRef(0)
+  const sceneWrapRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     loadSubtitles().then(setLyrics).catch(() => setLyrics([]))
@@ -127,6 +129,41 @@ function App() {
     const node = lyricRefs.current[activeIndex]
     node?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [activeIndex])
+
+  useEffect(() => {
+    const wrap = sceneWrapRef.current
+    if (!wrap) return
+
+    let rafId = 0
+    const measure = () => {
+      const scene = wrap.querySelector('.scene') as HTMLElement | null
+      const bride = wrap.querySelector('.couple.bride') as HTMLElement | null
+      const groom = wrap.querySelector('.couple.groom') as HTMLElement | null
+      if (!scene || !bride || !groom) return
+      const sceneRect = scene.getBoundingClientRect()
+      const brideRect = bride.getBoundingClientRect()
+      const groomRect = groom.getBoundingClientRect()
+      const brideOverflow = brideRect.left < sceneRect.left || brideRect.right > sceneRect.right
+      const groomOverflow = groomRect.left < sceneRect.left || groomRect.right > sceneRect.right
+      setOverlapActive(brideOverflow || groomOverflow)
+    }
+
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(rafId)
+      rafId = window.requestAnimationFrame(measure)
+    }
+
+    scheduleMeasure()
+    const ro = new ResizeObserver(scheduleMeasure)
+    ro.observe(wrap)
+    window.addEventListener('resize', scheduleMeasure)
+
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', scheduleMeasure)
+      window.cancelAnimationFrame(rafId)
+    }
+  }, [act])
 
   const brideSprite = useMemo(
     () => ({
@@ -237,8 +274,9 @@ function App() {
           </div>
         </div>
       </header>
-      <section className="scene-shell">
-        <Scene
+      <section className={`scene-shell ${overlapActive ? 'couple-overlap' : ''}`}>
+        <div className="scene-scroll" ref={sceneWrapRef}>
+          <Scene
           act={act}
           songPlaying={songPlaying}
           reelActive={reelActive}
@@ -265,7 +303,8 @@ function App() {
             { name: 'qiu', symbol: '💐' },
             { name: 'sun', symbol: '🤩' },
           ]}
-        />
+          />
+        </div>
         <div className="lyrics-dock">
           {songPlaying && (
             <div className="lyrics-list compact">
