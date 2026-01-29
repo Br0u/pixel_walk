@@ -105,6 +105,9 @@ function App() {
     return -1
   }, [currentTime, lyrics])
 
+  const blessingActive = songPlaying && currentTime >= 169
+  const blessingFadeOut = songPlaying && duration > 0 && currentTime >= Math.max(duration - 3, 0)
+
   useEffect(() => {
     if (activeIndex < 0) return
     const node = lyricRefs.current[activeIndex]
@@ -164,6 +167,8 @@ function App() {
         <Scene
           act={act}
           songPlaying={songPlaying}
+          blessingActive={blessingActive}
+          blessingFadeOut={blessingFadeOut}
           bride={brideSprite}
           groom={groomSprite}
           guests={[
