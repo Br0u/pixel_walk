@@ -254,7 +254,10 @@ ${skyLine}
       {blessingActive && (
         <div className="stage-blessing" role="status" aria-live="polite">
           <div className="blessing-knot">{'囍'}</div>
-          <div className="blessing-text">{'书瑞成双，新婚大喜'}</div>
+          <div className="blessing-text">
+            <span>书瑞成双</span>
+            <span>新婚大喜</span>
+          </div>
           <div className="blessing-knot">{'囍'}</div>
           <div className="blessing-particles">
             <span className="bp bp1">{'*'}</span>

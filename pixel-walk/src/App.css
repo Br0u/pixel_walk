@@ -582,14 +582,11 @@
 
   .scene {
     min-width: 360px;
+    height: 360px;
   }
 
   .lyrics-dock {
     width: min(1100px, 98vw);
-  }
-
-  .scene {
-    height: 360px;
   }
 
   .scene-art {
@@ -646,11 +643,59 @@
 
   .scene {
     min-width: 320px;
+    height: 500px;
   }
 
   .stage-area {
     width: 300px;
     bottom: 96px;
+  }
+
+  .stage-blessing {
+    max-width: 86%;
+    width: min(280px, 86vw);
+    padding: 8px 10px;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+    text-align: center;
+    top: 16%;
+    bottom: auto;
+    z-index: 9;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(140, 18, 18, 0.78), rgba(80, 12, 12, 0.72));
+  }
+
+  .stage-blessing .blessing-text {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .stage-blessing .blessing-text span {
+    display: block;
+  }
+
+  .stage-blessing .blessing-knot {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .scene-freeze {
+    top: 34%;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    z-index: 8;
+    padding: 6px 10px;
+    background: rgba(20, 8, 10, 0.55);
+    border-radius: 10px;
   }
 }
 
@@ -1156,6 +1201,8 @@
   text-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
   pointer-events: none;
   animation: blessing-pop 0.9s ease-out both;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .scene.blessing-fade .stage-blessing {
@@ -1489,6 +1536,8 @@
   letter-spacing: 0.08em;
   color: rgba(248, 230, 170, 0.9);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  max-width: 90%;
+  white-space: normal;
 }
 
 .pet-row {
