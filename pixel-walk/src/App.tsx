@@ -42,6 +42,7 @@ function App() {
   const [sealed, setSealed] = useState(true)
   const [blessingBursts, setBlessingBursts] = useState<BlessingParticle[]>([])
   const [overlapActive, setOverlapActive] = useState(false)
+  const [finaleLocked, setFinaleLocked] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
   const burstIdRef = useRef(0)
@@ -80,9 +81,11 @@ function App() {
 
   const handleCeremonyClick = () => {
     if (act === 'before') {
+      setFinaleLocked(true)
       setAct('singing')
     } else if (act === 'freeze') {
       setButtonLabel('💍 结婚')
+      setFinaleLocked(false)
       setAct('establish')
     }
   }
@@ -123,6 +126,13 @@ function App() {
   const reelFadeOut = currentTime >= 160
   const blessingActive = songPlaying && currentTime >= 169
   const blessingFadeOut = songPlaying && duration > 0 && currentTime >= Math.max(duration - 3, 0)
+  const finaleStart = 169.6
+  const finaleEnd = 202.6
+  const finaleDuration = Math.max(0, finaleEnd - finaleStart)
+  const finaleWindow = currentTime >= finaleStart && currentTime <= finaleEnd
+  const finaleManual = finaleLocked
+  const finaleActive = finaleWindow || finaleManual
+  const finaleOffset = Math.min(Math.max(currentTime - finaleStart, 0), finaleDuration)
 
   useEffect(() => {
     if (activeIndex < 0) return
@@ -193,6 +203,36 @@ function App() {
       },
     }),
     [],
+  )
+
+  const finaleSpriteBase = useMemo(
+    () => ({
+      sheet: '/assets/new/bb.png',
+      frameWidth: 256,
+      frameHeight: 256,
+      rows: 1,
+      scale: 1,
+      animations: {
+        idle: { row: 0, frames: 1, fps: 1, loop: true },
+      },
+    }),
+    [],
+  )
+
+  const finaleBrideSprite = useMemo(
+    () => ({
+      ...finaleSpriteBase,
+      name: brideSprite.name,
+    }),
+    [finaleSpriteBase, brideSprite.name],
+  )
+
+  const finaleGroomSprite = useMemo(
+    () => ({
+      ...finaleSpriteBase,
+      name: groomSprite.name,
+    }),
+    [finaleSpriteBase, groomSprite.name],
   )
 
   const handleBlessingBurst = (event: PointerEvent<HTMLDivElement>) => {
@@ -283,8 +323,12 @@ function App() {
           reelFadeOut={reelFadeOut}
           blessingActive={blessingActive}
           blessingFadeOut={blessingFadeOut}
-          bride={brideSprite}
-          groom={groomSprite}
+          bride={finaleActive ? finaleBrideSprite : brideSprite}
+          groom={finaleActive ? finaleGroomSprite : groomSprite}
+          finaleActive={finaleActive}
+          finaleFade={finaleWindow}
+          finaleOffset={finaleOffset}
+          finaleDuration={finaleDuration}
           guests={[
             { name: 'wbr', symbol: '🙌' },
             { name: 'wxt', symbol: '🎉' },

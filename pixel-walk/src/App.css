@@ -444,6 +444,55 @@
   }
 }
 
+@media (max-width: 700px) {
+  .stage-blessing {
+    max-width: 86%;
+    width: min(280px, 86vw);
+    padding: 8px 10px;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+    text-align: center;
+    top: 16%;
+    bottom: auto;
+    z-index: 9;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(140, 18, 18, 0.78), rgba(80, 12, 12, 0.72));
+  }
+
+  .stage-blessing .blessing-text {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .stage-blessing .blessing-text span {
+    display: block;
+  }
+
+  .stage-blessing .blessing-knot {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .scene-freeze {
+    top: 34%;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    z-index: 8;
+    padding: 6px 10px;
+    background: rgba(20, 8, 10, 0.55);
+    border-radius: 10px;
+  }
+}
+
 @media (max-width: 600px) {
   .scene {
     height: 400px;
@@ -1290,6 +1339,21 @@
   transform: translateX(12px);
 }
 
+.scene.finale-fade .couple {
+  opacity: 0;
+  animation: finale-fade var(--finale-duration, 33s) ease-in-out both;
+  animation-delay: calc(-1s * var(--finale-offset, 0));
+}
+
+.scene.finale-on .stage-area {
+  gap: 0;
+  justify-content: center;
+}
+
+.scene.finale-on .couple.bride {
+  transform: translateX(0);
+}
+
 .couple-overlap .stage-area {
   gap: 6px;
 }
@@ -1893,6 +1957,21 @@
   }
   100% {
     opacity: 0.25;
+  }
+}
+
+@keyframes finale-fade {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

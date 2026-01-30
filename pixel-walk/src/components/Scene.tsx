@@ -12,6 +12,10 @@ type SceneProps = {
   reelFadeOut: boolean
   blessingActive: boolean
   blessingFadeOut: boolean
+  finaleActive: boolean
+  finaleFade: boolean
+  finaleOffset: number
+  finaleDuration: number
 }
 
 const pickClip = (meta: SpriteMeta, names: string[]): AnimationClip => {
@@ -36,6 +40,10 @@ export default function Scene({
   reelFadeOut,
   blessingActive,
   blessingFadeOut,
+  finaleActive,
+  finaleFade,
+  finaleOffset,
+  finaleDuration,
 }: SceneProps) {
   const guestBodies = [
     ' o\n/|\\\n/ \\',
@@ -84,8 +92,18 @@ export default function Scene({
     animationDelay: `${index * reelInterval}s`,
   })
 
+  const finaleStyle = finaleFade
+    ? ({
+        '--finale-duration': `${finaleDuration}s`,
+        '--finale-offset': `${finaleOffset}s`,
+      } as CSSProperties)
+    : undefined
+
   return (
-    <div className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''} ${reelActive ? 'reel-on' : ''} ${reelFadeOut ? 'reel-fade' : ''} ${blessingActive ? 'blessing-on' : ''} ${blessingFadeOut ? 'blessing-fade' : ''}`}>
+    <div
+      className={`scene wedding-scene act-${act} ${songPlaying ? 'song-on' : ''} ${reelActive ? 'reel-on' : ''} ${reelFadeOut ? 'reel-fade' : ''} ${blessingActive ? 'blessing-on' : ''} ${blessingFadeOut ? 'blessing-fade' : ''} ${finaleActive ? 'finale-on' : ''} ${finaleFade ? 'finale-fade' : ''}`}
+      style={finaleStyle}
+    >
       <pre className="scene-art">
         {`       ${luxeBanner}
 ${sparkleLine}
@@ -212,15 +230,17 @@ ${skyLine}
             className="sprite bride performer"
           />
         </div>
-        <div className="couple groom">
-          <div className="emoji-name">{groom.name}</div>
-          <Sprite
-            meta={groom}
-            clip={groomClip}
-            playing={couplePlaying}
-            className="sprite groom performer"
-          />
-        </div>
+        {!finaleActive && (
+          <div className="couple groom">
+            <div className="emoji-name">{groom.name}</div>
+            <Sprite
+              meta={groom}
+              clip={groomClip}
+              playing={couplePlaying}
+              className="sprite groom performer"
+            />
+          </div>
+        )}
       </div>
 
       <div className={`pet-row ${catCheer ? 'cat-cheer' : ''}`} aria-hidden="true">
