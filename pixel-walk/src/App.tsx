@@ -13,6 +13,18 @@ type BlessingParticle = {
   drift: number
   delay: number
 }
+type FireworkParticle = {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  alpha: number
+  radius: number
+  color: string
+}
+type FireworkBurst = {
+  particles: FireworkParticle[]
+}
 
 const loadSubtitles = async (): Promise<LyricLine[]> => {
   const candidates = [
@@ -43,10 +55,18 @@ function App() {
   const [blessingBursts, setBlessingBursts] = useState<BlessingParticle[]>([])
   const [overlapActive, setOverlapActive] = useState(false)
   const [finaleLocked, setFinaleLocked] = useState(false)
+  const [fireworksVisible, setFireworksVisible] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lyricRefs = useRef<Array<HTMLDivElement | null>>([])
   const burstIdRef = useRef(0)
   const sceneWrapRef = useRef<HTMLDivElement | null>(null)
+  const fireworksCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const fireworksCtxRef = useRef<CanvasRenderingContext2D | null>(null)
+  const fireworksRef = useRef<FireworkBurst[]>([])
+  const fireworksRafRef = useRef<number | null>(null)
+  const fireworksTimerRef = useRef<number | null>(null)
+  const fireworksActiveRef = useRef(false)
+  const prevTimeRef = useRef(0)
 
   useEffect(() => {
     loadSubtitles().then(setLyrics).catch(() => setLyrics([]))
@@ -83,6 +103,7 @@ function App() {
     if (act === 'before') {
       setFinaleLocked(true)
       setAct('singing')
+      triggerFireworks(7)
     } else if (act === 'freeze') {
       setButtonLabel('💍 结婚')
       setFinaleLocked(false)
@@ -141,6 +162,40 @@ function App() {
   }, [activeIndex])
 
   useEffect(() => {
+    const canvas = fireworksCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    fireworksCtxRef.current = ctx
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1
+      const width = window.innerWidth
+      const height = window.innerHeight
+      canvas.width = Math.floor(width * dpr)
+      canvas.height = Math.floor(height * dpr)
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+
+    return () => {
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  useEffect(() => {
+    const prevTime = prevTimeRef.current
+    if (songPlaying && prevTime < finaleStart && currentTime >= finaleStart) {
+      triggerFireworks(8)
+    }
+    prevTimeRef.current = currentTime
+  }, [currentTime, finaleStart, songPlaying])
+
+  useEffect(() => {
     const wrap = sceneWrapRef.current
     if (!wrap) return
 
@@ -174,6 +229,97 @@ function App() {
       window.cancelAnimationFrame(rafId)
     }
   }, [act])
+
+  const createFirework = (x: number, y: number): FireworkBurst => {
+    const particles: FireworkParticle[] = Array.from({ length: 56 }, () => {
+      const angle = Math.random() * Math.PI * 2
+      const speed = 1.5 + Math.random() * 4.8
+      const color = `hsl(${Math.random() * 360}, 100%, 60%)`
+      return {
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (1.5 + Math.random() * 2),
+        alpha: 1,
+        radius: 1.6 + Math.random() * 2.4,
+        color,
+      }
+    })
+    return { particles }
+  }
+
+  const startFireworksLoop = () => {
+    if (fireworksRafRef.current !== null) return
+    const ctx = fireworksCtxRef.current
+    const canvas = fireworksCanvasRef.current
+    if (!ctx || !canvas) return
+
+    const step = () => {
+      const width = canvas.clientWidth
+      const height = canvas.clientHeight
+
+      if (!fireworksActiveRef.current && fireworksRef.current.length === 0) {
+        ctx.clearRect(0, 0, width, height)
+        fireworksRafRef.current = null
+        return
+      }
+
+      ctx.clearRect(0, 0, width, height)
+      ctx.globalCompositeOperation = 'lighter'
+
+      const nextBursts: FireworkBurst[] = []
+      for (const burst of fireworksRef.current) {
+        const nextParticles: FireworkParticle[] = []
+        for (const particle of burst.particles) {
+          particle.x += particle.vx
+          particle.y += particle.vy
+          particle.vy += 0.06
+          particle.alpha -= 0.0012
+          if (particle.alpha <= 0) continue
+          ctx.globalAlpha = particle.alpha
+          ctx.fillStyle = particle.color
+          ctx.shadowBlur = 12
+          ctx.shadowColor = particle.color
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
+          ctx.fill()
+          nextParticles.push(particle)
+        }
+        if (nextParticles.length > 0) {
+          nextBursts.push({ particles: nextParticles })
+        }
+      }
+      fireworksRef.current = nextBursts
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
+
+      fireworksRafRef.current = window.requestAnimationFrame(step)
+    }
+
+    fireworksRafRef.current = window.requestAnimationFrame(step)
+  }
+
+  const triggerFireworks = (count = 6) => {
+    const canvas = fireworksCanvasRef.current
+    if (!canvas) return
+    const width = canvas.clientWidth || window.innerWidth
+    const height = canvas.clientHeight || window.innerHeight
+    for (let i = 0; i < count; i += 1) {
+      const x = width * (0.18 + Math.random() * 0.64)
+      const y = height * (0.12 + Math.random() * 0.35)
+      fireworksRef.current.push(createFirework(x, y))
+    }
+    fireworksActiveRef.current = true
+    setFireworksVisible(true)
+    startFireworksLoop()
+    if (fireworksTimerRef.current !== null) {
+      window.clearTimeout(fireworksTimerRef.current)
+    }
+    fireworksTimerRef.current = window.setTimeout(() => {
+      fireworksActiveRef.current = false
+      setFireworksVisible(false)
+    }, 15000)
+  }
 
   const brideSprite = useMemo(
     () => ({
@@ -270,6 +416,11 @@ function App() {
 
   return (
     <div className={`app ${sealed ? 'sealed' : 'opened'}`} onPointerDown={handleBlessingBurst}>
+      <canvas
+        ref={fireworksCanvasRef}
+        className={`fireworks-canvas ${fireworksVisible ? 'active' : ''}`}
+        aria-hidden="true"
+      />
       <div className={`red-envelope ${sealed ? 'sealed' : 'open'}`} aria-hidden={!sealed}>
         <div className="seal-panel left" />
         <div className="seal-panel right" />
