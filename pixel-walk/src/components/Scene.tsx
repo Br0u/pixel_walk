@@ -1,11 +1,11 @@
-import type { CSSProperties } from 'react'
+import { memo, type CSSProperties } from 'react'
 import type { AnimationClip, SpriteMeta } from '../types'
 import Sprite from './Sprite'
 
 type SceneProps = {
   bride: SpriteMeta
   groom: SpriteMeta
-  guests: { name: string; symbol: string }[]
+  guests: readonly { name: string; symbol: string }[]
   act: 'establish' | 'vows' | 'before' | 'singing' | 'kiss' | 'celebration' | 'freeze'
   songPlaying: boolean
   reelActive: boolean
@@ -30,7 +30,89 @@ const pickClip = (meta: SpriteMeta, names: string[]): AnimationClip => {
   return first
 }
 
-export default function Scene({
+const guestBodies = [
+  ' o\n/|\\\n/ \\',
+  ' o\n-|-\n/ \\',
+  ' o\n\\|/\n/ \\',
+  ' o\n/|\\\n _ ',
+]
+
+const guestPositions = [
+  { side: 'left', x: 2, y: 38 },
+  { side: 'left', x: 6, y: 20 },
+  { side: 'left', x: 10, y: 30 },
+  { side: 'left', x: 14, y: 12 },
+  { side: 'left', x: 18, y: 26 },
+  { side: 'left', x: 22, y: 8 },
+  { side: 'left', x: 26, y: 18 },
+  { side: 'left', x: 30, y: 4 },
+  { side: 'right', x: 2, y: 36 },
+  { side: 'right', x: 6, y: 18 },
+  { side: 'right', x: 10, y: 28 },
+  { side: 'right', x: 14, y: 10 },
+  { side: 'right', x: 18, y: 24 },
+  { side: 'right', x: 22, y: 8 },
+  { side: 'right', x: 26, y: 20 },
+  { side: 'right', x: 30, y: 6 },
+] as const
+
+const reelInterval = 5
+const reelImages = Array.from({ length: 18 }, (_, index) => {
+  const suffix = String(index + 1).padStart(2, '0')
+  return `/assets/pic/memory-${suffix}.jpg`
+})
+const reelDuration = reelImages.length * reelInterval
+const reelDurationStyle = { '--reel-duration': `${reelDuration}s` } as CSSProperties
+
+const headMap: Record<string, string> = {
+  '🙌': '😄',
+  '🎉': '🥳',
+  '🎊': '🤩',
+  'o/': '😆',
+  '\\o': '😁',
+  '🥂': '🙂',
+  '✨': '😊',
+  '🎈': '😄',
+  '🥳': '🥳',
+  '😄': '😄',
+  '🎵': '😌',
+  '💐': '☺️',
+  '🤩': '🤩',
+}
+
+const bodyMap: Record<string, string> = {
+  'o/': ' o/\n/| \n/ \\',
+  '\\o': ' \\o\n |\\\n/ \\',
+  '🙌': ' o\n\\|/\n/ \\',
+  '🎉': ' o\n/|\\\n/ \\',
+  '🎊': ' o\n-|-\n/ \\',
+  '🥂': ' o\n/|\\\n/ \\',
+  '✨': ' o\n/|\\\n/ \\',
+  '🎈': ' o\n/|\\\n/ \\',
+  '🥳': ' o\n\\|/\n/ \\',
+  '😄': ' o\n/|\\\n/ \\',
+  '🎵': ' o\n-|-\n/ \\',
+  '💐': ' o\n/|\\\n/ \\',
+  '🤩': ' o\n\\|/\n/ \\',
+}
+
+const partyBodyMap: Record<string, string> = {
+  'o/': ' o/\n/| \n/ \\',
+  '\\o': ' \\o\n |\\\n/ \\',
+  '🙌': ' o\n\\|/\n/ \\',
+  '🎉': ' o\n/|\\\n_/_',
+  '🎊': ' o\n-|-\n\\_/',
+  '🥂': ' o\n/|\\\n_/_',
+  '✨': ' o\n/|\\\n/ \\',
+  '🎈': ' o\n/|\\\n/ \\',
+  '🥳': ' o\n\\|/\n/ \\',
+  '😄': ' o\n/|\\\n/ \\',
+  '🎵': ' o\n-|-\n/ \\',
+  '💐': ' o\n/|\\\n/ \\',
+  '🤩': ' o\n\\|/\n/ \\',
+}
+
+function Scene({
   bride,
   groom,
   guests,
@@ -45,12 +127,6 @@ export default function Scene({
   finaleOffset,
   finaleDuration,
 }: SceneProps) {
-  const guestBodies = [
-    ' o\n/|\\\n/ \\',
-    ' o\n-|-\n/ \\',
-    ' o\n\\|/\n/ \\',
-    ' o\n/|\\\n _ ',
-  ]
   const luxeBanner =
     act === 'celebration' || act === 'singing' ? '*** GRAND BALL ***' : '*** WEDDING CEREMONY ***'
   const sparkleLine = ' . *  .   *  .  *   .  *  . ' as const
@@ -61,31 +137,6 @@ export default function Scene({
   const groomClip = pickClip(groom, ['idle'])
   const couplePlaying = act === 'singing' || act === 'celebration'
   const catCheer = songPlaying
-  const guestPositions = [
-    { side: 'left', x: 2, y: 38 },
-    { side: 'left', x: 6, y: 20 },
-    { side: 'left', x: 10, y: 30 },
-    { side: 'left', x: 14, y: 12 },
-    { side: 'left', x: 18, y: 26 },
-    { side: 'left', x: 22, y: 8 },
-    { side: 'left', x: 26, y: 18 },
-    { side: 'left', x: 30, y: 4 },
-    { side: 'right', x: 2, y: 36 },
-    { side: 'right', x: 6, y: 18 },
-    { side: 'right', x: 10, y: 28 },
-    { side: 'right', x: 14, y: 10 },
-    { side: 'right', x: 18, y: 24 },
-    { side: 'right', x: 22, y: 8 },
-    { side: 'right', x: 26, y: 20 },
-    { side: 'right', x: 30, y: 6 },
-  ]
-  const reelInterval = 5
-  const reelImages = Array.from({ length: 18 }, (_, index) => {
-    const suffix = String(index + 1).padStart(2, '0')
-    return `/assets/pic/memory-${suffix}.jpg`
-  })
-  const reelDuration = reelImages.length * reelInterval
-  const reelDurationStyle = { '--reel-duration': `${reelDuration}s` } as CSSProperties
   const buildReelStyle = (src: string, index: number): CSSProperties => ({
     ...reelDurationStyle,
     backgroundImage: `url('${src}')`,
@@ -301,51 +352,6 @@ ${skyLine}
             pos.side === 'left'
               ? { left: offsetX, bottom: `calc(110px + ${offsetY})` }
               : { right: offsetX, bottom: `calc(110px + ${offsetY})` }
-          const headMap: Record<string, string> = {
-            '🙌': '😄',
-            '🎉': '🥳',
-            '🎊': '🤩',
-            'o/': '😆',
-            '\\o': '😁',
-            '🥂': '🙂',
-            '✨': '😊',
-            '🎈': '😄',
-            '🥳': '🥳',
-            '😄': '😄',
-            '🎵': '😌',
-            '💐': '☺️',
-            '🤩': '🤩',
-          }
-          const bodyMap: Record<string, string> = {
-            'o/': ' o/\n/| \n/ \\',
-            '\\o': ' \\o\n |\\\n/ \\',
-            '🙌': ' o\n\\|/\n/ \\',
-            '🎉': ' o\n/|\\\n/ \\',
-            '🎊': ' o\n-|-\n/ \\',
-            '🥂': ' o\n/|\\\n/ \\',
-            '✨': ' o\n/|\\\n/ \\',
-            '🎈': ' o\n/|\\\n/ \\',
-            '🥳': ' o\n\\|/\n/ \\',
-            '😄': ' o\n/|\\\n/ \\',
-            '🎵': ' o\n-|-\n/ \\',
-            '💐': ' o\n/|\\\n/ \\',
-            '🤩': ' o\n\\|/\n/ \\',
-          }
-          const partyBodyMap: Record<string, string> = {
-            'o/': ' o/\n/| \n/ \\',
-            '\\o': ' \\o\n |\\\n/ \\',
-            '🙌': ' o\n\\|/\n/ \\',
-            '🎉': ' o\n/|\\\n_/_',
-            '🎊': ' o\n-|-\n\\_/',
-            '🥂': ' o\n/|\\\n_/_',
-            '✨': ' o\n/|\\\n/ \\',
-            '🎈': ' o\n/|\\\n/ \\',
-            '🥳': ' o\n\\|/\n/ \\',
-            '😄': ' o\n/|\\\n/ \\',
-            '🎵': ' o\n-|-\n/ \\',
-            '💐': ' o\n/|\\\n/ \\',
-            '🤩': ' o\n\\|/\n/ \\',
-          }
           const headEmoji = headMap[guest.symbol] ?? '🙂'
           const body =
             act === 'celebration'
@@ -376,3 +382,5 @@ ${skyLine}
     </div>
   )
 }
+
+export default memo(Scene)

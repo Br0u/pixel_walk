@@ -1,5 +1,14 @@
 import './App.css'
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type SyntheticEvent,
+} from 'react'
 import Scene from './components/Scene'
 import { parseSubtitles, type LyricLine } from './lyrics'
 
@@ -25,6 +34,24 @@ type FireworkParticle = {
 type FireworkBurst = {
   particles: FireworkParticle[]
 }
+const SCENE_GUESTS = [
+  { name: 'wbr', symbol: '🙌' },
+  { name: 'wxt', symbol: '🎉' },
+  { name: 'wyh', symbol: 'o/' },
+  { name: 'yyn', symbol: '\\o' },
+  { name: 'xml', symbol: '🎊' },
+  { name: 'gq', symbol: '🙌' },
+  { name: 'vanris', symbol: '🎉' },
+  { name: 'ranco', symbol: '🎊' },
+  { name: 'lin', symbol: '🥂' },
+  { name: 'mei', symbol: '✨' },
+  { name: 'hao', symbol: '🎈' },
+  { name: 'kai', symbol: '🥳' },
+  { name: 'yu', symbol: '😄' },
+  { name: 'zhi', symbol: '🎵' },
+  { name: 'qiu', symbol: '💐' },
+  { name: 'sun', symbol: '🤩' },
+] as const
 
 const loadSubtitles = async (): Promise<LyricLine[]> => {
   const candidates = [
@@ -71,6 +98,97 @@ function App() {
   useEffect(() => {
     loadSubtitles().then(setLyrics).catch(() => setLyrics([]))
   }, [])
+
+  const createFirework = useCallback((x: number, y: number): FireworkBurst => {
+    const particles: FireworkParticle[] = Array.from({ length: 56 }, () => {
+      const angle = Math.random() * Math.PI * 2
+      const speed = 1.5 + Math.random() * 4.8
+      const color = `hsl(${Math.random() * 360}, 100%, 60%)`
+      return {
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (1.5 + Math.random() * 2),
+        alpha: 1,
+        radius: 1.6 + Math.random() * 2.4,
+        color,
+      }
+    })
+    return { particles }
+  }, [])
+
+  const startFireworksLoop = useCallback(() => {
+    if (fireworksRafRef.current !== null) return
+    const ctx = fireworksCtxRef.current
+    const canvas = fireworksCanvasRef.current
+    if (!ctx || !canvas) return
+
+    const step = () => {
+      const width = canvas.clientWidth
+      const height = canvas.clientHeight
+
+      if (!fireworksActiveRef.current && fireworksRef.current.length === 0) {
+        ctx.clearRect(0, 0, width, height)
+        fireworksRafRef.current = null
+        return
+      }
+
+      ctx.clearRect(0, 0, width, height)
+      ctx.globalCompositeOperation = 'lighter'
+
+      const nextBursts: FireworkBurst[] = []
+      for (const burst of fireworksRef.current) {
+        const nextParticles: FireworkParticle[] = []
+        for (const particle of burst.particles) {
+          particle.x += particle.vx
+          particle.y += particle.vy
+          particle.vy += 0.06
+          particle.alpha -= 0.0012
+          if (particle.alpha <= 0) continue
+          ctx.globalAlpha = particle.alpha
+          ctx.fillStyle = particle.color
+          ctx.shadowBlur = 12
+          ctx.shadowColor = particle.color
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
+          ctx.fill()
+          nextParticles.push(particle)
+        }
+        if (nextParticles.length > 0) {
+          nextBursts.push({ particles: nextParticles })
+        }
+      }
+      fireworksRef.current = nextBursts
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
+
+      fireworksRafRef.current = window.requestAnimationFrame(step)
+    }
+
+    fireworksRafRef.current = window.requestAnimationFrame(step)
+  }, [])
+
+  const triggerFireworks = useCallback((count = 6) => {
+    const canvas = fireworksCanvasRef.current
+    if (!canvas) return
+    const width = canvas.clientWidth || window.innerWidth
+    const height = canvas.clientHeight || window.innerHeight
+    for (let i = 0; i < count; i += 1) {
+      const x = width * (0.18 + Math.random() * 0.64)
+      const y = height * (0.12 + Math.random() * 0.35)
+      fireworksRef.current.push(createFirework(x, y))
+    }
+    fireworksActiveRef.current = true
+    setFireworksVisible(true)
+    startFireworksLoop()
+    if (fireworksTimerRef.current !== null) {
+      window.clearTimeout(fireworksTimerRef.current)
+    }
+    fireworksTimerRef.current = window.setTimeout(() => {
+      fireworksActiveRef.current = false
+      setFireworksVisible(false)
+    }, 15000)
+  }, [createFirework, startFireworksLoop])
 
   useEffect(() => {
     if (act === 'establish') {
@@ -131,7 +249,17 @@ function App() {
     const audio = audioRef.current
     if (!audio) return
     audio.currentTime = value
+    prevTimeRef.current = value
     setCurrentTime(value)
+  }
+
+  const handleTimeUpdate = (event: SyntheticEvent<HTMLAudioElement>) => {
+    const next = event.currentTarget.currentTime
+    if (songPlaying && prevTimeRef.current < finaleStart && next >= finaleStart) {
+      triggerFireworks(8)
+    }
+    prevTimeRef.current = next
+    setCurrentTime((prev) => (Math.abs(prev - next) < 0.016 ? prev : next))
   }
 
   const activeIndex = useMemo(() => {
@@ -188,14 +316,6 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const prevTime = prevTimeRef.current
-    if (songPlaying && prevTime < finaleStart && currentTime >= finaleStart) {
-      triggerFireworks(8)
-    }
-    prevTimeRef.current = currentTime
-  }, [currentTime, finaleStart, songPlaying])
-
-  useEffect(() => {
     const wrap = sceneWrapRef.current
     if (!wrap) return
 
@@ -230,96 +350,17 @@ function App() {
     }
   }, [act])
 
-  const createFirework = (x: number, y: number): FireworkBurst => {
-    const particles: FireworkParticle[] = Array.from({ length: 56 }, () => {
-      const angle = Math.random() * Math.PI * 2
-      const speed = 1.5 + Math.random() * 4.8
-      const color = `hsl(${Math.random() * 360}, 100%, 60%)`
-      return {
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - (1.5 + Math.random() * 2),
-        alpha: 1,
-        radius: 1.6 + Math.random() * 2.4,
-        color,
-      }
-    })
-    return { particles }
-  }
-
-  const startFireworksLoop = () => {
-    if (fireworksRafRef.current !== null) return
-    const ctx = fireworksCtxRef.current
-    const canvas = fireworksCanvasRef.current
-    if (!ctx || !canvas) return
-
-    const step = () => {
-      const width = canvas.clientWidth
-      const height = canvas.clientHeight
-
-      if (!fireworksActiveRef.current && fireworksRef.current.length === 0) {
-        ctx.clearRect(0, 0, width, height)
-        fireworksRafRef.current = null
-        return
-      }
-
-      ctx.clearRect(0, 0, width, height)
-      ctx.globalCompositeOperation = 'lighter'
-
-      const nextBursts: FireworkBurst[] = []
-      for (const burst of fireworksRef.current) {
-        const nextParticles: FireworkParticle[] = []
-        for (const particle of burst.particles) {
-          particle.x += particle.vx
-          particle.y += particle.vy
-          particle.vy += 0.06
-          particle.alpha -= 0.0012
-          if (particle.alpha <= 0) continue
-          ctx.globalAlpha = particle.alpha
-          ctx.fillStyle = particle.color
-          ctx.shadowBlur = 12
-          ctx.shadowColor = particle.color
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-          ctx.fill()
-          nextParticles.push(particle)
-        }
-        if (nextParticles.length > 0) {
-          nextBursts.push({ particles: nextParticles })
-        }
-      }
-      fireworksRef.current = nextBursts
-      ctx.globalAlpha = 1
-      ctx.globalCompositeOperation = 'source-over'
-
-      fireworksRafRef.current = window.requestAnimationFrame(step)
-    }
-
-    fireworksRafRef.current = window.requestAnimationFrame(step)
-  }
-
-  const triggerFireworks = (count = 6) => {
-    const canvas = fireworksCanvasRef.current
-    if (!canvas) return
-    const width = canvas.clientWidth || window.innerWidth
-    const height = canvas.clientHeight || window.innerHeight
-    for (let i = 0; i < count; i += 1) {
-      const x = width * (0.18 + Math.random() * 0.64)
-      const y = height * (0.12 + Math.random() * 0.35)
-      fireworksRef.current.push(createFirework(x, y))
-    }
-    fireworksActiveRef.current = true
-    setFireworksVisible(true)
-    startFireworksLoop()
+  useEffect(() => () => {
     if (fireworksTimerRef.current !== null) {
       window.clearTimeout(fireworksTimerRef.current)
     }
-    fireworksTimerRef.current = window.setTimeout(() => {
-      fireworksActiveRef.current = false
-      setFireworksVisible(false)
-    }, 15000)
-  }
+    if (fireworksRafRef.current !== null) {
+      window.cancelAnimationFrame(fireworksRafRef.current)
+    }
+    fireworksTimerRef.current = null
+    fireworksRafRef.current = null
+    fireworksRef.current = []
+  }, [])
 
   const brideSprite = useMemo(
     () => ({
@@ -480,24 +521,7 @@ function App() {
           finaleFade={finaleWindow}
           finaleOffset={finaleOffset}
           finaleDuration={finaleDuration}
-          guests={[
-            { name: 'wbr', symbol: '🙌' },
-            { name: 'wxt', symbol: '🎉' },
-            { name: 'wyh', symbol: 'o/' },
-            { name: 'yyn', symbol: '\\o' },
-            { name: 'xml', symbol: '🎊' },
-            { name: 'gq', symbol: '🙌' },
-            { name: 'vanris', symbol: '🎉' },
-            { name: 'ranco', symbol: '🎊' },
-            { name: 'lin', symbol: '🥂' },
-            { name: 'mei', symbol: '✨' },
-            { name: 'hao', symbol: '🎈' },
-            { name: 'kai', symbol: '🥳' },
-            { name: 'yu', symbol: '😄' },
-            { name: 'zhi', symbol: '🎵' },
-            { name: 'qiu', symbol: '💐' },
-            { name: 'sun', symbol: '🤩' },
-          ]}
+          guests={SCENE_GUESTS}
           />
         </div>
         <div className="lyrics-dock">
@@ -545,7 +569,7 @@ function App() {
         onPlay={() => setSongPlaying(true)}
         onPause={() => setSongPlaying(false)}
         onEnded={() => setSongPlaying(false)}
-        onTimeUpdate={(event) => setCurrentTime((event.target as HTMLAudioElement).currentTime)}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={(event) => setDuration((event.target as HTMLAudioElement).duration || 0)}
       />
     </div>
